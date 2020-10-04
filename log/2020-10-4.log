@@ -100,3 +100,19 @@
 2020/10/04 23:24:40 /Users/xcz/go/src/xcz/gdm/main.go:38: VerifyUrl is success, downloading will begin in a moment
 
 2020/10/04 23:25:20 /Users/xcz/go/src/xcz/gdm/http/download.go:147: success! download completely
+
+2020/10/04 23:41:25 /Users/xcz/go/src/xcz/GDM/main.go:38: VerifyUrl is success, downloading will begin in a moment
+
+2020/10/04 23:42:18 /Users/xcz/go/src/xcz/GDM/http/download.go:147: success! download completely
+
+2020/10/04 23:45:42 /Users/xcz/go/src/xcz/GDM/main.go:38: VerifyUrl is success, downloading will begin in a moment
+
+2020/10/04 23:45:42 /Users/xcz/go/src/xcz/GDM/http/download.go:58: localAddress is an invalid directory path, error info is: target filePath encounter some errors: stat : no such file or directory
+
+2020/10/04 23:45:42 /Users/xcz/go/src/xcz/GDM/http/download.go:58: localAddress is an invalid directory path, error info is: target filePath encounter some errors: stat : no such file or directory
+
+2020/10/04 23:46:30 /Users/xcz/go/src/xcz/GDM/main.go:38: VerifyUrl is success, downloading will begin in a moment
+
+2020/10/04 23:46:30 /Users/xcz/go/src/xcz/GDM/http/download.go:57: localAddress is an invalid directory path, error info is: target filePath encounter some errors: stat : no such file or directory
+
+2020/10/04 23:46:30 /Users/xcz/go/src/xcz/GDM/http/download.go:57: localAddress is an invalid directory path, error info is: target filePath encounter some errors: stat : no such file or directory

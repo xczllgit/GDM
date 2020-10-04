@@ -23,9 +23,7 @@ type SubFile struct {
 //为多线程切分对应数据范围的子文件
 func SplitResourceByThread(contentLength int64, threadNum int64) []*SubFile {
 	subFiles := []*SubFile{}
-	fmt.Println("准备生成")
 	fileNames := generateTempFileNames(threadNum, 0)
-	fmt.Println("生成完毕")
 	if threadNum == 1 {
 		subfile := &SubFile{
 			tempFileName: fileNames[0],
@@ -64,7 +62,6 @@ func SplitResourceByThread(contentLength int64, threadNum int64) []*SubFile {
 
 //为子文件生成随机名称
 func generateTempFileNames(threadNum int64, retryCount int64) []string {
-	fmt.Println("尝试第", retryCount, "次")
 	prefix := genesis.SubFilePrefix
 	var result []string
 	tempMap := make(map[string]int64)
@@ -98,6 +95,5 @@ func generateRandString() string {
 	data := []byte(tempString)
 	has := md5.Sum(data)
 	md5str := fmt.Sprintf("%x", has)
-	fmt.Println("随机值: ", md5str)
 	return md5str
 }

@@ -24,7 +24,6 @@ func DownloadFromUrl(URL string, threadNum int64, localAddress string, resourceH
 		threadNum = 1
 	}
 	subfiles := SplitResourceByThread(resourceHead.ContentLength, threadNum)
-	fmt.Println("测试埋点")
 	if subfiles == nil || len(subfiles) == 0 {
 		genesis.Logger.Fatal("SplitResourceByThread failed")
 	}

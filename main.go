@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"os"
 	"xcz/gdm/genesis"
 	"xcz/gdm/http"
 	"xcz/gdm/logs"
@@ -10,7 +12,7 @@ import (
 
 var targetUrl = flag.String("url", "https://iterm2.com/downloads/stable/iTerm2-3_3_12.zip", "Input Your Resource URL Here")
 var threadNum = flag.Int64("threadNum", 6, "Input Thread Nums Here Which You Want To Use For Downloading")
-var localAddress = flag.String("address", "/Users/xcz/Downloads", "Input Your Local Address To Storage Resource")
+var localAddress = flag.String("address", "", "Input Your Local Address To Storage Resource")
 
 func init() {
 	//读取配置文件
@@ -39,5 +41,14 @@ func main() {
 	}
 	//解析线程数量的正确性
 	//解析本地存储地址的正确性
+	local, err := os.Stat(*localAddress)
+	if err != nil {
+		fmt.Println("sorry, the selected target address encounter some errors: ", err)
+		genesis.Logger.Fatal("target Address encounter some error: ", err)
+	}
+	if !local.IsDir() {
+		fmt.Println("sorry, the selected target address is not a directory")
+		genesis.Logger.Fatal("sorry, the selected target address is not a directory")
+	}
 	http.DownloadFromUrl(*targetUrl, *threadNum, *localAddress, head)
 }
