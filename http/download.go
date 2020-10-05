@@ -117,7 +117,7 @@ func downLoadByMulThread(URL string, ThreadNum int64, localAddress string, subFi
 	go showDownloadProgressBar(localAddress, subFiles, resourceHead)
 	group.Wait()
 	//等待子文件下载完成，合并各个子文件到目标文件
-	fmt.Println("Download completely, wait for merging subFile")
+	fmt.Println("\nDownload completely, wait for merging subFile")
 	targetFileName := parseFileNameFromUrl(URL)
 	targetFile, err := utils.CreateFile(localAddress, targetFileName)
 	if err != nil {
@@ -148,6 +148,8 @@ func downLoadByMulThread(URL string, ThreadNum int64, localAddress string, subFi
 
 //展示下载进度条
 func showDownloadProgressBar(localAddress string, subFiles []*SubFile, resourceHead *utils.ResourceHead) {
+	var beforeSize float64 = 0
+	var speed float64 = 0
 	for {
 		var currentSize float64 = 0
 		for _, subFile := range subFiles {
@@ -164,9 +166,13 @@ func showDownloadProgressBar(localAddress string, subFiles []*SubFile, resourceH
 		pert := currentSize / float64(resourceHead.ContentLength)
 		pertStr := strconv.FormatFloat(pert*100, 'f', 2, 64)
 		bars := showBar(int(pert * 100))
-		showStr := "Downloading: [" + bars + "]  " + pertStr + "%"
+		//网速KB/s
+		speed = (currentSize - beforeSize) / 1000
+		speedStr := strconv.FormatFloat(speed, 'f', 2, 64)
+		showStr := "Downloading: [" + bars + "]  " + pertStr + "%" + "  " + speedStr + " KB/s"
 		//加上"\r%s"，就能让进度条保持一行，为什么？
 		fmt.Printf("\r%s", showStr)
+		beforeSize = currentSize
 		if pert >= 1 {
 			break
 		}
@@ -180,11 +186,6 @@ func showBar(num int) string {
 		result = result + "="
 	}
 	return result
-}
-
-//展示网速
-func showNetSpeed() {
-	//1、获取当前子文件大小、一秒前子文件大小，相减即为网速
 }
 
 func removeSubFile(localAddress string, subFiles []*SubFile) {

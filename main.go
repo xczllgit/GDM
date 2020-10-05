@@ -10,7 +10,8 @@ import (
 	"xcz/gdm/utils"
 )
 
-var targetUrl = flag.String("url", "https://iterm2.com/downloads/stable/iTerm2-3_3_12.zip", "Input Your Resource URL Here")
+//var targetUrl = flag.String("url", "https://iterm2.com/downloads/stable/iTerm2-3_3_12.zip", "Input Your Resource URL Here")
+var targetUrl = flag.String("url", "", "Input Your Resource URL Here")
 var threadNum = flag.Int64("threadNum", 6, "Input Thread Nums Here Which You Want To Use For Downloading")
 var localAddress = flag.String("address", "", "Input Your Local Address To Storage Resource")
 
