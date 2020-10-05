@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 	"xcz/gdm/genesis"
@@ -30,16 +29,23 @@ func DownloadFromUrl(URL string, threadNum int64, localAddress string, resourceH
 	//资源不支持多线程
 	if !resourceHead.SupportMultiThread || threadNum == 1 {
 		group.Add(1)
-		_, err := downLoadBySingleThread(URL, localAddress, subfiles[0], 0, resourceHead)
+		_, err := downLoadBySingleThread(URL, localAddress, subfiles[0], 0)
+		go func() {
+			time.Sleep(1 * time.Second)
+			showDownloadProgressBar(localAddress, subfiles, resourceHead)
+		}()
 		fmt.Println("The download will begin in a moment")
-		time.Sleep(1 * time.Second)
-		go showDownloadProgressBar(localAddress, subfiles, resourceHead)
 		group.Wait()
 		if err != nil {
 			genesis.Logger.Fatal("[downLoadBySingleThread] fail, encounter some errors: ", err)
 		}
 		//下载完成，将对应子文件改名为目标文件
-		targetFileName := parseFileNameFromUrl(URL)
+		var targetFileName string
+		if resourceHead.FullResourceName != "" {
+			targetFileName = resourceHead.FullResourceName
+		} else {
+			targetFileName = resourceHead.UrlResourceName
+		}
 		err = os.Rename(utils.GetFileAbsolutePath(localAddress, subfiles[0].tempFileName), utils.GetFileAbsolutePath(localAddress, targetFileName))
 		if err != nil {
 			genesis.Logger.Println("download completely, but rename subfile to targetfile failed, errors: ", err)
@@ -53,7 +59,7 @@ func DownloadFromUrl(URL string, threadNum int64, localAddress string, resourceH
 }
 
 //单线程下载
-func downLoadBySingleThread(URL string, localAddress string, subFile *SubFile, retryCount int64, resourceHead *utils.ResourceHead) (*os.File, error) {
+func downLoadBySingleThread(URL string, localAddress string, subFile *SubFile, retryCount int64) (*os.File, error) {
 	//创建临时文件，避免进度条出现panic
 	file, err := utils.CreateFile(localAddress, subFile.tempFileName)
 	if err != nil {
@@ -70,7 +76,7 @@ func downLoadBySingleThread(URL string, localAddress string, subFile *SubFile, r
 		if retryCount >= genesis.RetryCount {
 			genesis.Logger.Fatal("sorry, [downLoadBySingleThread] retry count exceeds our retry value, then our program will exit")
 		}
-		return downLoadBySingleThread(URL, localAddress, subFile, retryCount+1, resourceHead)
+		return downLoadBySingleThread(URL, localAddress, subFile, retryCount+1)
 	}
 
 	//指定本次http请求的数据范围,用于断点续传
@@ -87,7 +93,7 @@ func downLoadBySingleThread(URL string, localAddress string, subFile *SubFile, r
 		if retryCount >= genesis.RetryCount {
 			genesis.Logger.Fatal("sorry, [downLoadBySingleThread] retry count exceeds our retry value, then our program will exit")
 		}
-		return downLoadBySingleThread(URL, localAddress, subFile, retryCount+1, resourceHead)
+		return downLoadBySingleThread(URL, localAddress, subFile, retryCount+1)
 	}
 	//http返回的response必须关闭，否则会造成内存泄漏
 	defer response.Body.Close()
@@ -103,7 +109,7 @@ func downLoadBySingleThread(URL string, localAddress string, subFile *SubFile, r
 		if retryCount >= genesis.RetryCount {
 			genesis.Logger.Fatal("sorry, [downLoadBySingleThread] retry count exceeds our retry value, then our program will exit")
 		}
-		return downLoadBySingleThread(URL, localAddress, subFile, retryCount+1, resourceHead)
+		return downLoadBySingleThread(URL, localAddress, subFile, retryCount+1)
 	}
 	group.Done()
 	return file, nil
@@ -113,7 +119,7 @@ func downLoadByMulThread(URL string, ThreadNum int64, localAddress string, subFi
 	//根据子文件并发下载资源的各个部分
 	for _, subFile := range subFiles {
 		group.Add(1)
-		go downLoadBySingleThread(URL, localAddress, subFile, retryCount, resourceHead)
+		go downLoadBySingleThread(URL, localAddress, subFile, retryCount)
 	}
 	fmt.Println("The download will begin in a moment")
 	time.Sleep(2 * time.Second)
@@ -122,7 +128,14 @@ func downLoadByMulThread(URL string, ThreadNum int64, localAddress string, subFi
 	group.Wait()
 	//等待子文件下载完成，合并各个子文件到目标文件
 	fmt.Println("\nDownload completely, wait for merging subFile")
-	targetFileName := parseFileNameFromUrl(URL)
+
+	var targetFileName string
+	if resourceHead.FullResourceName != "" {
+		targetFileName = resourceHead.FullResourceName
+	} else {
+		targetFileName = resourceHead.UrlResourceName
+	}
+
 	targetFile, err := utils.CreateFile(localAddress, targetFileName)
 	if err != nil {
 		//清除子文件
@@ -163,7 +176,7 @@ func showDownloadProgressBar(localAddress string, subFiles []*SubFile, resourceH
 		speed = (currentSize - beforeSize) / 1000
 		speedStr := strconv.FormatFloat(speed, 'f', 2, 64)
 		showStr := "Downloading: [" + bars + "]  " + pertStr + "%" + "  " + speedStr + " KB/s"
-		//加上"\r%s"，就能让进度条保持一行，为什么？
+		//打印进度
 		fmt.Printf("\r%s", showStr)
 		beforeSize = currentSize
 		if pert >= 1 {
@@ -198,10 +211,4 @@ func getFileContent(localAddress string, fileName string) []byte {
 		genesis.Logger.Fatal("Read subfile fail, filePath: ", filePath, " ,errors info: ", err)
 	}
 	return subfileContent
-}
-
-func parseFileNameFromUrl(url string) string {
-	lastIndex := strings.LastIndex(url, "/")
-	fileName := url[lastIndex+1:]
-	return fileName
 }

@@ -9,8 +9,12 @@ import (
 )
 
 type ResourceHead struct {
-	ContentLength      int64 //资源大小，Byte
-	SupportMultiThread bool  //是否支持断点续传/多线程
+	ContentLength      int64  //资源大小，Byte
+	SupportMultiThread bool   //是否支持断点续传/多线程
+	UrlResourceName    string //从url中解析出的资源名
+	FullResourceName   string //完整资源名称（最高优先级）
+	TargetUrl          string //目标URL，如果没有重定向，则此Url与输入Url相同，重定向会更新此Url
+	ResponseStatusCode int    //响应码
 }
 
 //检测URL是否可达，利用curl工具
@@ -40,14 +44,39 @@ func VerifyUrl(url string) (bool, error, *ResourceHead) {
 	}
 	//TODO 如何处理1xx和3xx
 	resource := &ResourceHead{
-		ContentLength: resp.ContentLength,
+		ContentLength:      resp.ContentLength,
+		TargetUrl:          resp.Request.URL.String(),
+		ResponseStatusCode: resp.StatusCode,
 	}
+	resource.FullResourceName = parseContentDisposition(resp)
+	resource.UrlResourceName = parseFileNameFromUrl(resource.TargetUrl)
 	if resp.Header.Get("Accept-Ranges") != "" {
 		resource.SupportMultiThread = true
 	} else {
 		resource.SupportMultiThread = false
 	}
 	return true, nil, resource
+}
+
+//从url链接末尾直接获取资源名称
+func parseFileNameFromUrl(url string) string {
+	lastIndex := strings.LastIndex(url, "/")
+	fileName := url[lastIndex+1:]
+	return fileName
+}
+
+//获取http response中content-disposition数据，其中可能包含有完整文件名称
+func parseContentDisposition(resp *http.Response) string {
+	contentDisposition := resp.Header.Get("content-disposition")
+	if contentDisposition == "" {
+		return contentDisposition
+	}
+	contentDisposition = strings.ToLower(contentDisposition)
+	index := strings.LastIndex(contentDisposition, "filename=")
+	if index == -1 {
+		return ""
+	}
+	return contentDisposition[index+9:]
 }
 
 //获取当前函数名称
