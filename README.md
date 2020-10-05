@@ -4,7 +4,7 @@ A Multi-Thread Download Manager
 使用示例：
 
 ```
-go run main.go -url="目标url" -threadNum=目标线程数 -localAddress="本地存储目录"
+go run main.go -url="目标url" -threadNum=目标线程数 -address="本地存储目录"
 go run main.go -url=https://iterm2.com/downloads/stable/iTerm2-3_3_12.zip -threadNum=5 -address=/Users/username/Downloads
 ```
 
