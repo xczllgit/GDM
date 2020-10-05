@@ -29,12 +29,13 @@ func DownloadFromUrl(URL string, threadNum int64, localAddress string, resourceH
 	//资源不支持多线程
 	if !resourceHead.SupportMultiThread || threadNum == 1 {
 		group.Add(1)
-		_, err := downLoadBySingleThread(URL, localAddress, subfiles[0], 0)
+		fmt.Println("The download will begin in a moment")
 		go func() {
+			//延迟一秒，以便单线程创建临时文件
 			time.Sleep(1 * time.Second)
 			showDownloadProgressBar(localAddress, subfiles, resourceHead)
 		}()
-		fmt.Println("The download will begin in a moment")
+		_, err := downLoadBySingleThread(URL, localAddress, subfiles[0], 0)
 		group.Wait()
 		if err != nil {
 			genesis.Logger.Fatal("[downLoadBySingleThread] fail, encounter some errors: ", err)

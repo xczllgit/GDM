@@ -42,7 +42,7 @@ func VerifyUrl(url string) (bool, error, *ResourceHead) {
 		err := errors.New("the Url status is out of order")
 		return false, err, nil
 	}
-	//TODO 如何处理1xx和3xx
+	//对于1xx和3xx还可以进一步优化
 	resource := &ResourceHead{
 		ContentLength:      resp.ContentLength,
 		TargetUrl:          resp.Request.URL.String(),
