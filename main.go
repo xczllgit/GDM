@@ -36,8 +36,7 @@ func main() {
 	}
 	if !isRight {
 		genesis.Logger.Fatal("ParseUrl have a illegal URL for download, url is : ", *targetUrl)
-	}
-	if isRight {
+	} else {
 		genesis.Logger.Println("VerifyUrl is success, downloading will begin in a moment")
 	}
 	//解析线程数量的正确性
