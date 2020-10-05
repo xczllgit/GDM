@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"math/rand"
+	"os"
 	"time"
 	"xcz/gdm/genesis"
 )
@@ -96,4 +97,21 @@ func generateRandString() string {
 	has := md5.Sum(data)
 	md5str := fmt.Sprintf("%x", has)
 	return md5str
+}
+
+//合并子文件到targetFile中
+func MergeMulSubFile(subFiles []*SubFile, targetFile *os.File, localAddress string) {
+	for _, subFile := range subFiles {
+		//寻找目标文件末尾索引值（即下一次需要写入的起始索引）
+		endIndex, _ := targetFile.Seek(0, os.SEEK_END)
+		//将子文件内容转换为byte数组，方便写入目标文件中
+		subContent := getFileContent(localAddress, subFile.tempFileName)
+		_, err := targetFile.WriteAt(subContent, endIndex)
+		if err != nil {
+			//清除子文件
+			removeSubFile(localAddress, subFiles)
+			fmt.Println("sorry, merge ", targetFile.Name(), " fail, errors info: ", err)
+			genesis.Logger.Fatal("sorry, merge ", targetFile.Name(), " fail, errors info: ", err)
+		}
+	}
 }

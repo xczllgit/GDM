@@ -31,6 +31,9 @@ func DownloadFromUrl(URL string, threadNum int64, localAddress string, resourceH
 	if !resourceHead.SupportMultiThread || threadNum == 1 {
 		group.Add(1)
 		_, err := downLoadBySingleThread(URL, localAddress, subfiles[0], 0, resourceHead)
+		fmt.Println("The download will begin in a moment")
+		time.Sleep(1 * time.Second)
+		go showDownloadProgressBar(localAddress, subfiles, resourceHead)
 		group.Wait()
 		if err != nil {
 			genesis.Logger.Fatal("[downLoadBySingleThread] fail, encounter some errors: ", err)
@@ -41,10 +44,10 @@ func DownloadFromUrl(URL string, threadNum int64, localAddress string, resourceH
 		if err != nil {
 			genesis.Logger.Println("download completely, but rename subfile to targetfile failed, errors: ", err)
 		}
-		fmt.Println("Download completely")
+		fmt.Println("\nDownload completely")
 		return
 	}
-	//TODO 按照多线程模式下载
+	//按照多线程模式下载
 	downLoadByMulThread(URL, threadNum, localAddress, subfiles, 0, resourceHead)
 	return
 }
@@ -112,6 +115,7 @@ func downLoadByMulThread(URL string, ThreadNum int64, localAddress string, subFi
 		group.Add(1)
 		go downLoadBySingleThread(URL, localAddress, subFile, retryCount, resourceHead)
 	}
+	fmt.Println("The download will begin in a moment")
 	time.Sleep(2 * time.Second)
 	//显示进度条
 	go showDownloadProgressBar(localAddress, subFiles, resourceHead)
@@ -127,19 +131,8 @@ func downLoadByMulThread(URL string, ThreadNum int64, localAddress string, subFi
 		genesis.Logger.Fatal("sorry, create ", targetFileName, " fail, errors info: ", err)
 	}
 	defer targetFile.Close()
-	for _, subFile := range subFiles {
-		//寻找目标文件末尾索引值（即下一次需要写入的起始索引）
-		endIndex, _ := targetFile.Seek(0, os.SEEK_END)
-		//将子文件内容转换为byte数组，方便写入目标文件中
-		subContent := getFileContent(localAddress, subFile.tempFileName)
-		_, err := targetFile.WriteAt(subContent, endIndex)
-		if err != nil {
-			//清除子文件
-			removeSubFile(localAddress, subFiles)
-			fmt.Println("sorry, merge ", targetFileName, " fail, errors info: ", err)
-			genesis.Logger.Fatal("sorry, merge ", targetFileName, " fail, errors info: ", err)
-		}
-	}
+	//合并子文件
+	MergeMulSubFile(subFiles, targetFile, localAddress)
 	//清除子文件
 	removeSubFile(localAddress, subFiles)
 	fmt.Println("success! download completely")
